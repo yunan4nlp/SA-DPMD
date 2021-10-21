@@ -4,7 +4,7 @@ import random
 import time
 import argparse
 from data.Config import *
-from modules.DiaglogDP import *
+from modules.DialogDP import *
 from modules.Optimizer import *
 from modules.Decoder import *
 from script.evaluation import *
@@ -192,6 +192,6 @@ if __name__ == '__main__':
         structured_encoder.cuda()
         decoder.cuda()
 
-    parser = DiaglogDP(global_encoder, state_encoder, decoder, config)
+    parser = DialogDP(global_encoder, state_encoder, decoder, config)
 
     train(train_instances, dev_instances, test_instances, parser, vocab, config, tok_helper)

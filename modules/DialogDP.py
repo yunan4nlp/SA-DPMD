@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from data.Vocab import *
 
 
-class DiaglogDP(object):
+class DialogDP(object):
     def __init__(self, global_encoder, state_encoder, decoder, config):
         self.training = False
         self.use_cuda = next(filter(lambda p: p.requires_grad, decoder.parameters())).is_cuda
