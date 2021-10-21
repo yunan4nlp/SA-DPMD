@@ -92,9 +92,6 @@ class Configurable(object):
     def dropout_gru_hidden(self):
         return self._config.getfloat('Network','dropout_gru_hidden')
     @property
-    def use_structure(self):
-        return self._config.getboolean('Network', 'use_structure')
-    @property
     def start_layer(self):
         return self._config.getint('Network', 'start_layer')
     @property

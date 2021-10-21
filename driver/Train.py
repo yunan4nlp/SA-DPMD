@@ -23,7 +23,6 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
 
     model_param = list(parser.global_encoder.parameters()) + \
                   list(parser.state_encoder.parameters()) + \
-                  list(parser.structured_encoder.parameters()) + \
                   list(parser.decoder.parameters())
 
     optimizer = Optimizer(model_param, config)
@@ -193,6 +192,6 @@ if __name__ == '__main__':
         structured_encoder.cuda()
         decoder.cuda()
 
-    parser = DiaglogDP(global_encoder, state_encoder, structured_encoder, decoder, config)
+    parser = DiaglogDP(global_encoder, state_encoder, decoder, config)
 
     train(train_instances, dev_instances, test_instances, parser, vocab, config, tok_helper)

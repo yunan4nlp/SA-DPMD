@@ -6,27 +6,24 @@ from data.Vocab import *
 
 
 class DiaglogDP(object):
-    def __init__(self, global_encoder, state_encoder, structured_encoder, decoder, config):
+    def __init__(self, global_encoder, state_encoder, decoder, config):
         self.training = False
         self.use_cuda = next(filter(lambda p: p.requires_grad, decoder.parameters())).is_cuda
 
         self.config = config
         self.global_encoder = global_encoder
         self.state_encoder = state_encoder
-        self.structured_encoder = structured_encoder
         self.decoder = decoder
 
     def train(self):
         self.global_encoder.train()
         self.state_encoder.train()
-        self.structured_encoder.train()
         self.decoder.train()
         self.training = True
 
     def eval(self):
         self.global_encoder.eval()
         self.state_encoder.eval()
-        self.structured_encoder.eval()
         self.decoder.eval()
         self.training = False
 
@@ -75,31 +72,6 @@ class DiaglogDP(object):
         self.arc_logits = torch.cat(arc_logits, dim=1)
         self.rel_logits = torch.cat(rel_logits, dim=1)
 
-    def prepare(self, cur_step, edu_lengths, batch_arcs, batch_rels):
-        batch_size = len(edu_lengths)
-
-        batch_last_arc = np.ones(batch_size) * Vocab.ROOT
-        batch_last_rel = np.ones(batch_size) * Vocab.ROOT
-
-        if not(cur_step == 0 or cur_step == 1):
-            for idx in range(batch_size):
-                arcs = batch_arcs[idx]
-                rels = batch_rels[idx]
-                edu_len = edu_lengths[idx]
-                last_step = cur_step - 1
-                if last_step >= 0 and cur_step < edu_len:
-                    last_arc = arcs[last_step]
-                    last_rel = rels[last_step]
-                    if last_arc is not -1: batch_last_arc[idx] = last_arc
-                    if last_rel is not -1: batch_last_rel[idx] = last_rel
-
-        last_arc_index = torch.tensor(batch_last_arc).type(torch.LongTensor)
-        last_rel_index = torch.tensor(batch_last_rel).type(torch.LongTensor)
-        if self.use_cuda:
-            last_arc_index = last_arc_index.cuda()
-            last_rel_index = last_rel_index.cuda()
-        return last_arc_index, last_rel_index
-
     def is_finished(self, cur_step, edu_lengths):
         finished_flag = True
         for edu_length in edu_lengths:
@@ -129,17 +101,10 @@ class DiaglogDP(object):
         pred_arcs = None
         pred_rels = None
         while not self.is_finished(cur_step, edu_lengths):
-            last_arc_index, last_rel_index = self.prepare(cur_step, edu_lengths, pred_arcs, pred_rels)
             cur_feats = feats[:, cur_step, :, :]
             cur_arc_masks = arc_masks[:, cur_step, :]
 
-            if cur_step - 1 >= 0:
-                last_edu_represent = bert_outputs[:, cur_step - 1, :]
-            else:
-                last_edu_represent = None
-            s_hidden = self.structured_encoder(cur_step, last_edu_represent, last_arc_index, last_rel_index, edu_lengths)
-
-            state_hidden = self.state_encoder(cur_step, s_hidden, bert_outputs, gru_outputs, edu_lengths, cur_feats)
+            state_hidden = self.state_encoder(cur_step, bert_outputs, gru_outputs, edu_lengths, cur_feats)
             arc_logit, rel_logit = self.decoder(state_hidden, cur_arc_masks)
             arc_logits.append(arc_logit.unsqueeze(1))
             rel_logits.append(rel_logit.unsqueeze(1))
