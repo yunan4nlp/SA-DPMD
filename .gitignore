@@ -1,0 +1,9 @@
+driver/.DS_Store
+ddp_model
+modules/__pycache__
+script/__pycache__
+data/__pycache__
+examples/Molweni_sp
+examples/STAC_sp
+examples/.DS_Store
+.DS_Store
