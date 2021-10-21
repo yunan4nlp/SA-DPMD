@@ -9,7 +9,6 @@ from modules.Optimizer import *
 from modules.Decoder import *
 from script.evaluation import *
 from modules.GlobalEncoder import *
-from modules.StructuredEncoder import *
 from data.BertTokenHelper import *
 from modules.BertModel import *
 from torch.cuda.amp import autocast as autocast
@@ -176,12 +175,10 @@ if __name__ == '__main__':
 
     global_encoder = GlobalEncoder(vocab, config, bert_extractor)
     state_encoder = StateEncoder(vocab, config)
-    structured_encoder = StructuredEncoder(vocab, config)
     decoder = Decoder(vocab, config)
 
     # print(global_encoder)
     print(state_encoder)
-    print(structured_encoder)
     print(decoder)
 
     if config.use_cuda:
@@ -189,7 +186,6 @@ if __name__ == '__main__':
 
         global_encoder.cuda()
         state_encoder.cuda()
-        structured_encoder.cuda()
         decoder.cuda()
 
     parser = DialogDP(global_encoder, state_encoder, decoder, config)
