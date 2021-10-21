@@ -92,6 +92,9 @@ class Configurable(object):
     def dropout_gru_hidden(self):
         return self._config.getfloat('Network','dropout_gru_hidden')
     @property
+    def tune_start_layer(self):
+        return self._config.getint('Network', 'tune_start_layer')
+    @property
     def start_layer(self):
         return self._config.getint('Network', 'start_layer')
     @property
@@ -102,6 +105,9 @@ class Configurable(object):
     @property
     def L2_REG(self):
         return self._config.getfloat('Optimizer','L2_REG')
+    @property
+    def bert_learning_rate(self):
+        return self._config.getfloat('Optimizer','bert_learning_rate')
     @property
     def learning_rate(self):
         return self._config.getfloat('Optimizer','learning_rate')

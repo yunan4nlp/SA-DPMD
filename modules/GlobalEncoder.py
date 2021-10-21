@@ -35,8 +35,7 @@ class GlobalEncoder(nn.Module):
         token_type_ids = token_type_ids.view(-1, max_tok_len)
         attention_mask = attention_mask.view(-1, max_tok_len)
 
-        with torch.no_grad():
-            _, _, encoder_outputs = \
+        _, _, encoder_outputs = \
                 self.bert_extractor(input_ids, token_type_ids, attention_mask)
 
         bert_inputs = []

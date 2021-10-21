@@ -10,7 +10,8 @@ from modules.Decoder import *
 from script.evaluation import *
 from modules.GlobalEncoder import *
 from data.BertTokenHelper import *
-from modules.BertModel import *
+from modules.BertModelTune import *
+
 from torch.cuda.amp import autocast as autocast
 from torch.cuda.amp.grad_scaler import GradScaler
 
@@ -20,10 +21,17 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
     best_dev_las = 0
     batch_num = int(np.ceil(len(train_instances) / float(config.train_batch_size)))
 
-    model_param = list(parser.global_encoder.parameters()) + \
+    bert_param = list(parser.global_encoder.bert_extractor.parameters())
+
+    parser_param = list(parser.global_encoder.mlp_words.parameters()) + \
+                  list(parser.global_encoder.rescale.parameters()) + \
+                  list(parser.global_encoder.edu_GRU.parameters()) + \
                   list(parser.state_encoder.parameters()) + \
                   list(parser.decoder.parameters())
 
+    model_param = [{'params': bert_param, 'lr': config.bert_learning_rate},
+                   {'params': parser_param, 'lr': config.learning_rate}]
+    
     optimizer = Optimizer(model_param, config)
     scaler = GradScaler()
 
@@ -64,7 +72,7 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
             batch_iter += 1
             if batch_iter % config.update_every == 0 or batch_iter == batch_num:
                 scaler.unscale_(optimizer.optim)
-                nn.utils.clip_grad_norm_(model_param, max_norm=config.clip)
+                nn.utils.clip_grad_norm_(bert_param + parser_param, max_norm=config.clip)
 
                 scaler.step(optimizer.optim)
                 scaler.update()
