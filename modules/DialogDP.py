@@ -67,10 +67,12 @@ class DialogDP(object):
             feats = feats.cuda()
 
         bert_outputs, gru_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
-        _, _, arc_logits, rel_logits = self.decode(bert_outputs, gru_outputs, edu_lengths, arc_masks, feats)
+        pred_arcs, pred_rels, arc_logits, rel_logits = self.decode(bert_outputs, gru_outputs, edu_lengths, arc_masks, feats)
 
         self.arc_logits = torch.cat(arc_logits, dim=1)
         self.rel_logits = torch.cat(rel_logits, dim=1)
+
+        return  pred_arcs, pred_rels
 
     def is_finished(self, cur_step, edu_lengths):
         finished_flag = True
@@ -78,21 +80,6 @@ class DialogDP(object):
             if cur_step < edu_length:
                 finished_flag = False
         return finished_flag
-
-    def parse(self, batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths,
-              edu_lengths, arc_masks, feats):
-        if self.use_cuda:
-            batch_input_ids = batch_input_ids.cuda()
-            batch_token_type_ids = batch_token_type_ids.cuda()
-            batch_attention_mask = batch_attention_mask.cuda()
-
-            arc_masks = arc_masks.cuda()
-            feats = feats.cuda()
-
-        bert_outputs, gru_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
-
-        pred_arcs, pred_rels, _, _ = self.decode(bert_outputs, gru_outputs, edu_lengths, arc_masks, feats)
-        return pred_arcs, pred_rels
 
     def decode(self, bert_outputs, gru_outputs, edu_lengths, arc_masks, feats):
         cur_step = 0
