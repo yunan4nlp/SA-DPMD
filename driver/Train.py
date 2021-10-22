@@ -99,7 +99,7 @@ def predict(instances, parser, vocab, config, tokenizer, outputFile):
         batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths = \
             batch_bert_variable(onebatch, config, tokenizer)
         with autocast():
-            pred_arcs, pred_rels = parser.parse(
+            pred_arcs, pred_rels = parser.forward(
                 batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths,
                 edu_lengths, arc_masks, dialog_feats)
         for batch_index, (arcs, rels) in enumerate(zip(pred_arcs, pred_rels)):
