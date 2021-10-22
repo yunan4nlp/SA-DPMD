@@ -24,9 +24,9 @@ class GlobalEncoder(nn.Module):
         self.rescale = ScalarMix(mixture_size=self.layer_num)
 
         self.edu_GRU = nn.GRU(input_size=config.word_dims,
-                              hidden_size=config.gru_hiddens,
+                              hidden_size=config.gru_hiddens // 2,
                               num_layers=config.gru_layers,
-                              bidirectional=False, batch_first=True)
+                              bidirectional=True, batch_first=True)
         self.hidden_drop = nn.Dropout(config.dropout_gru_hidden)
 
     def forward(self, input_ids, token_type_ids, attention_mask, edu_lengths):
