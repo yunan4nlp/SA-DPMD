@@ -56,17 +56,18 @@ class DialogDP(object):
         self.arc_logits = torch.cat(arc_logits, dim=1)
         self.rel_logits = torch.cat(rel_logits, dim=1)
     '''
-    def forward(self, batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths,
+    def forward(self, batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_users, token_lengths,
                 edu_lengths, arc_masks, feats):
         if self.use_cuda:
             batch_input_ids = batch_input_ids.cuda()
             batch_token_type_ids = batch_token_type_ids.cuda()
             batch_attention_mask = batch_attention_mask.cuda()
+            batch_users = batch_users.cuda()
 
             arc_masks = arc_masks.cuda()
             feats = feats.cuda()
 
-        bert_outputs, gru_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
+        bert_outputs, gru_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_users, edu_lengths)
         pred_arcs, pred_rels, arc_logits, rel_logits = self.decode(bert_outputs, gru_outputs, edu_lengths, arc_masks, feats)
 
         self.arc_logits = torch.cat(arc_logits, dim=1)
