@@ -1,3 +1,4 @@
+from typing_extensions import get_origin
 import torch
 from modules.Layer import _model_var, pad_sequence
 import numpy as np
@@ -66,11 +67,10 @@ class DialogDP(object):
             arc_masks = arc_masks.cuda()
             feats = feats.cuda()
 
-        bert_outputs, gru_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
-        pred_arcs, pred_rels, arc_logits, rel_logits = self.decode(bert_outputs, gru_outputs, edu_lengths, arc_masks, feats)
-
-        self.arc_logits = torch.cat(arc_logits, dim=1)
-        self.rel_logits = torch.cat(rel_logits, dim=1)
+        global_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
+        state_hidden = self.state_encoder(global_outputs, feats)
+        self.arc_logits, self.rel_logits = self.decoder(state_hidden, arc_masks)
+        pred_arcs, pred_rels = self.decode(self.arc_logits, self.rel_logits, edu_lengths)
 
         return  pred_arcs, pred_rels
 
@@ -81,20 +81,12 @@ class DialogDP(object):
                 finished_flag = False
         return finished_flag
 
-    def decode(self, bert_outputs, gru_outputs, edu_lengths, arc_masks, feats):
+    def decode(self, arc_logits, rel_logits, edu_lengths):
         cur_step = 0
-        arc_logits = []
-        rel_logits = []
         pred_arcs = None
         pred_rels = None
         while not self.is_finished(cur_step, edu_lengths):
-            cur_feats = feats[:, cur_step, :, :]
-            cur_arc_masks = arc_masks[:, cur_step, :]
-
-            state_hidden = self.state_encoder(cur_step, bert_outputs, gru_outputs, edu_lengths, cur_feats)
-            arc_logit, rel_logit = self.decoder(state_hidden, cur_arc_masks)
-            arc_logits.append(arc_logit.unsqueeze(1))
-            rel_logits.append(rel_logit.unsqueeze(1))
+            arc_logit, rel_logit = arc_logits[:, cur_step, :], rel_logits[:, cur_step, :]
 
             pred_arc = arc_logit.detach().max(-1)[1].cpu().numpy()
             batch_size, max_edu_size, label_size = rel_logit.size()
@@ -114,7 +106,7 @@ class DialogDP(object):
                 pred_rels = np.concatenate((pred_rels, pred_rel), axis=-1)
             cur_step += 1
 
-        return pred_arcs, pred_rels, arc_logits, rel_logits
+        return pred_arcs, pred_rels
 
     def compute_loss(self, gold_arcs, gold_rels):
         batch_size, max_edu_size, _ = self.arc_logits.size()

@@ -18,14 +18,12 @@ class StateEncoder(nn.Module):
         nn.init.kaiming_uniform_(self.nonlinear1.linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
         nn.init.kaiming_uniform_(self.nonlinear2.linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
 
-    def forward(self, cur_step,  edu_represents, edu_outputs, edu_lengths, feats):
-        batch_size, max_edu_len, _ = edu_outputs.size()
+    def forward(self, global_outputs, feats):
+        batch_size, max_edu_len, _ = global_outputs.size()
 
-        edu_output_i = edu_outputs[:, cur_step, :].unsqueeze(1).repeat(1, max_edu_len, 1)
-        edu_represent_i = edu_represents[:, cur_step, :].unsqueeze(1).repeat(1, max_edu_len, 1)
+        global_outputs = global_outputs.unsqueeze(1).repeat(1, max_edu_len, 1, 1)
 
-
-        state_input = torch.cat([edu_output_i, edu_outputs, edu_represent_i, edu_represents, feats], dim=-1)
+        state_input = torch.cat([global_outputs, global_outputs.transpose(1, 2), feats], dim=-1)
 
         hidden = self.nonlinear1(state_input)
         state_hidden = self.nonlinear2(hidden)

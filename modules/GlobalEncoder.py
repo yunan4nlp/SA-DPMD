@@ -56,4 +56,6 @@ class GlobalEncoder(nn.Module):
         outputs = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
         hidden = self.hidden_drop(outputs[0])
 
-        return x_embed, hidden
+        global_output = torch.cat([x_embed, hidden], dim=-1)
+
+        return global_output
