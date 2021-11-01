@@ -68,7 +68,7 @@ class DialogDP(object):
             arc_masks = arc_masks.cuda()
             feats = feats.cuda()
 
-        global_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, edu_lengths)
+        global_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_sp, edu_lengths)
         state_hidden = self.state_encoder(global_outputs, feats)
         self.arc_logits, self.rel_logits = self.decoder(state_hidden, arc_masks)
         pred_arcs, pred_rels = self.decode(self.arc_logits, self.rel_logits, edu_lengths)

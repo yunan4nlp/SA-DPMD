@@ -20,12 +20,12 @@ def read_corpus(file, max_edu_num=10000):
             instance.EDUs = instance.EDUs[:max_edu_num]
             instance.gold_arcs = instance.gold_arcs[:max_edu_num]
             instance.gold_rels = instance.gold_rels[:max_edu_num]
-            user_index(instance)
+            sp_index(instance)
 
             instances.append(instance)
         return instances
 
-def user_index(instance):
+def sp_index(instance):
     speaker_counter = Counter()
     for edu in instance.EDUs:
         speaker = edu['speaker']
@@ -36,11 +36,11 @@ def user_index(instance):
     reverse = lambda x: dict(zip(x, range(len(x))))
     sp2id = reverse(id2sp)
 
-    instance.user_index = list()
+    instance.sp_index = list()
     for edu in instance.EDUs:
         speaker = edu['speaker']
         th_id = sp2id[speaker]
-        instance.user_index.append(th_id)
+        instance.sp_index.append(th_id)
 
 def info2instance(dialog_info):
     instance = Dialog()
@@ -193,17 +193,17 @@ def batch_bert_variable(onebatch, config, tokenizer):
     token_lengths = token_lengths.flatten()
     return batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths
 
-def batch_user_variable(onebatch, vocab):
+def batch_sp_variable(onebatch, vocab):
     batch_size = len(onebatch)
     edu_lengths = [len(instance.EDUs) for instance in onebatch]
     max_edu_len = max(edu_lengths)
-    batch_user = np.zeros([batch_size, max_edu_len], dtype=np.long)
+    batch_sp = np.zeros([batch_size, max_edu_len], dtype=np.long)
 
     for idx, instance in enumerate(onebatch):
-        for idy, u_id in enumerate(instance.user_index):
-            batch_user[idx, idy] = u_id
-    batch_user = torch.tensor(batch_user)
-    return batch_user
+        for idy, u_id in enumerate(instance.sp_index):
+            batch_sp[idx, idy] = u_id
+    batch_sp = torch.tensor(batch_sp)
+    return batch_sp
 
 def batch_data_variable(onebatch, vocab):
     batch_size = len(onebatch)

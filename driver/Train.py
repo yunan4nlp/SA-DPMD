@@ -45,12 +45,12 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
             parser.train()
             batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths = \
                 batch_bert_variable(onebatch, config, tokenizer)
-            batch_users = batch_user_variable(onebatch, vocab)
+            batch_sp = batch_sp_variable(onebatch, vocab)
             edu_lengths, arc_masks = batch_data_variable(onebatch, vocab)
             feats = batch_feat_variable(onebatch, vocab)
             gold_arcs, gold_rels = batch_label_variable(onebatch, vocab)
             with autocast():
-                parser.forward(batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_users, token_lengths,
+                parser.forward(batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_sp, token_lengths,
                                edu_lengths, arc_masks, feats)
                 loss = parser.compute_loss(gold_arcs, gold_rels)
                 loss = loss / config.update_every
@@ -105,12 +105,12 @@ def predict(instances, parser, vocab, config, tokenizer, outputFile):
     for onebatch in data_iter(instances, batch_size=config.test_batch_size, shuffle=False):
         edu_lengths, arc_masks = batch_data_variable(onebatch, vocab)
         dialog_feats = batch_feat_variable(onebatch, vocab)
-        batch_users = batch_user_variable(onebatch, vocab)
+        batch_sp = batch_sp_variable(onebatch, vocab)
         batch_input_ids, batch_token_type_ids, batch_attention_mask, token_lengths = \
             batch_bert_variable(onebatch, config, tokenizer)
         with autocast():
             pred_arcs, pred_rels = parser.forward(
-                batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_users, token_lengths,
+                batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_sp, token_lengths,
                 edu_lengths, arc_masks, dialog_feats)
         for batch_index, (arcs, rels) in enumerate(zip(pred_arcs, pred_rels)):
             instance = onebatch[batch_index]

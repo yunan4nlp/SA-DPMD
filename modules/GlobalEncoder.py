@@ -18,7 +18,7 @@ class GlobalEncoder(nn.Module):
         self.mlp_words = nn.ModuleList([NonLinear(config.bert_hidden_size, config.word_dims, activation=nn.Tanh()) \
                                         for i in range(self.layer_num)])
 
-        self.user_embeddings = nn.Embedding(num_embeddings=config.max_user_size, embedding_dim=config.word_dims)
+        self.sp_embeddings = nn.Embedding(num_embeddings=config.max_sp_size, embedding_dim=config.word_dims)
 
         for i in range(self.layer_num):
             nn.init.kaiming_uniform_(self.mlp_words[i].linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
@@ -31,7 +31,7 @@ class GlobalEncoder(nn.Module):
                               bidirectional=True, batch_first=True)
         self.hidden_drop = nn.Dropout(config.dropout_gru_hidden)
 
-    def forward(self, input_ids, token_type_ids, attention_mask, users, edu_lengths):
+    def forward(self, input_ids, token_type_ids, attention_mask, speakers, edu_lengths):
         batch_size, max_edu_num, max_tok_len = input_ids.size()
         input_ids = input_ids.view(-1, max_tok_len)
         token_type_ids = token_type_ids.view(-1, max_tok_len)
@@ -54,8 +54,8 @@ class GlobalEncoder(nn.Module):
         x_embed = self.drop_emb(x_embed)
 
         x_embed = x_embed.view(batch_size, max_edu_num, -1)
-        user_embeddings = self.user_embeddings(users)
-        x_embed = x_embed + user_embeddings
+        sp_embeddings = self.sp_embeddings(speakers)
+        x_embed = x_embed + sp_embeddings
 
         gru_input = nn.utils.rnn.pack_padded_sequence(x_embed, edu_lengths, batch_first=True, enforce_sorted=False)
         outputs, _ = self.edu_GRU(gru_input)
