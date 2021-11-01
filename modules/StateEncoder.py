@@ -7,7 +7,7 @@ import math
 class StateEncoder(nn.Module):
     def __init__(self, vocab, config):
         super(StateEncoder, self).__init__()
-        self.nonlinear1 = NonLinear(input_size=config.word_dims * 2 + config.gru_hiddens * 2 + 3,
+        self.nonlinear1 = NonLinear(input_size=config.word_dims * 2 + config.gru_hiddens * 2 ,
                                     hidden_size=config.hidden_size,
                                     activation=nn.Tanh())
 

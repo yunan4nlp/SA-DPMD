@@ -41,6 +41,9 @@ class Configurable(object):
     @property
     def max_vocab_size(self):
         return self._config.getint('Data','max_vocab_size')
+    @property
+    def max_user_size(self):
+        return self._config.getint('Data','max_user_size')
 
     @property
     def save_dir(self):
