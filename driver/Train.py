@@ -23,11 +23,12 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
 
     bert_param = list(parser.global_encoder.bert_extractor.parameters())
 
-    parser_param = list(parser.global_encoder.mlp_words.parameters()) + \
-                  list(parser.global_encoder.rescale.parameters()) + \
-                  list(parser.global_encoder.edu_GRU.parameters()) + \
-                  list(parser.state_encoder.parameters()) + \
-                  list(parser.decoder.parameters())
+    parser_param = \
+        list(parser.global_encoder.mlp_words.parameters()) + \
+        list(parser.global_encoder.rescale.parameters()) + \
+        list(parser.global_encoder.edu_GRU.parameters()) + \
+        list(parser.state_encoder.parameters()) + \
+        list(parser.decoder.parameters())
 
     model_param = [{'params': bert_param, 'lr': config.bert_learning_rate},
                    {'params': parser_param, 'lr': config.learning_rate}]
