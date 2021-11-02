@@ -6,24 +6,27 @@ from data.Vocab import *
 
 
 class DialogDP(object):
-    def __init__(self, global_encoder, state_encoder, decoder, config):
+    def __init__(self, global_encoder, state_encoder, sp_encoder, decoder, config):
         self.training = False
         self.use_cuda = next(filter(lambda p: p.requires_grad, decoder.parameters())).is_cuda
 
         self.config = config
         self.global_encoder = global_encoder
         self.state_encoder = state_encoder
+        self.sp_encoder = sp_encoder
         self.decoder = decoder
 
     def train(self):
         self.global_encoder.train()
         self.state_encoder.train()
+        self.sp_encoder.train()
         self.decoder.train()
         self.training = True
 
     def eval(self):
         self.global_encoder.eval()
         self.state_encoder.eval()
+        self.sp_encoder.eval()
         self.decoder.eval()
         self.training = False
 
@@ -68,7 +71,9 @@ class DialogDP(object):
             feats = feats.cuda()
 
         global_outputs = self.global_encoder(batch_input_ids, batch_token_type_ids, batch_attention_mask, batch_sp, edu_lengths)
-        state_hidden = self.state_encoder(global_outputs, feats)
+        sp_outputs = self.sp_encoder(batch_sp, edu_lengths)
+
+        state_hidden = self.state_encoder(global_outputs, sp_outputs)
         self.arc_logits, self.rel_logits = self.decoder(state_hidden, arc_masks)
         pred_arcs, pred_rels = self.decode(self.arc_logits, self.rel_logits, edu_lengths)
 

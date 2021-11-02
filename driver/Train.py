@@ -1,5 +1,6 @@
 import sys
 sys.path.extend(["../../", "../", "./"])
+
 import random
 import time
 import argparse
@@ -11,6 +12,7 @@ from script.evaluation import *
 from modules.GlobalEncoder import *
 from data.BertTokenHelper import *
 from modules.BertModelTune import *
+from modules.SPEncoder import SPEncoder
 
 from torch.cuda.amp import autocast as autocast
 from torch.cuda.amp.grad_scaler import GradScaler
@@ -27,6 +29,7 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
         list(parser.global_encoder.mlp_words.parameters()) + \
         list(parser.global_encoder.rescale.parameters()) + \
         list(parser.global_encoder.edu_GRU.parameters()) + \
+        list(parser.sp_encoder.parameters()) + \
         list(parser.state_encoder.parameters()) + \
         list(parser.decoder.parameters())
 
@@ -186,10 +189,12 @@ if __name__ == '__main__':
 
     global_encoder = GlobalEncoder(vocab, config, bert_extractor)
     state_encoder = StateEncoder(vocab, config)
+    sp_encoder = SPEncoder(vocab, config)
     decoder = Decoder(vocab, config)
 
     # print(global_encoder)
     print(state_encoder)
+    print(sp_encoder)
     print(decoder)
 
     if config.use_cuda:
@@ -197,8 +202,9 @@ if __name__ == '__main__':
 
         global_encoder.cuda()
         state_encoder.cuda()
+        sp_encoder.cuda()
         decoder.cuda()
 
-    parser = DialogDP(global_encoder, state_encoder, decoder, config)
+    parser = DialogDP(global_encoder, state_encoder, sp_encoder, decoder, config)
 
     train(train_instances, dev_instances, test_instances, parser, vocab, config, tok_helper)
