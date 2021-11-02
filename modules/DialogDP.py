@@ -1,4 +1,3 @@
-from typing_extensions import get_origin
 import torch
 from modules.Layer import _model_var, pad_sequence
 import numpy as np
