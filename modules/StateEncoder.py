@@ -1,5 +1,6 @@
-import torch.nn as nn
 from modules.Layer import *
+from modules.ScaleMix import *
+
 import torch.nn as nn
 import math
 
@@ -19,6 +20,8 @@ class StateEncoder(nn.Module):
                                     hidden_size=config.mlp_arc_size + config.mlp_rel_size,
                                     activation=nn.Tanh())
 
+        self.rescale = ScalarMix(mixture_size=2)
+
         nn.init.kaiming_uniform_(self.utt_nonlinear.linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
         nn.init.kaiming_uniform_(self.sp_nonlinear.linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
         nn.init.kaiming_uniform_(self.nonlinear2.linear.weight, a=math.sqrt(5), mode='fan_in', nonlinearity='tanh')
@@ -33,5 +36,6 @@ class StateEncoder(nn.Module):
         sp_state_input = torch.cat([sp_outputs, sp_outputs.transpose(1, 2)], dim=-1)
         sp_hidden = self.sp_nonlinear(sp_state_input)
 
-        state_hidden = self.nonlinear2(utt_hidden + sp_hidden)
+        state_hidden = self.rescale([utt_hidden, sp_hidden])
+        state_hidden = self.nonlinear2(state_hidden)
         return state_hidden
