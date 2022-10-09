@@ -1,6 +1,6 @@
 import sys
 sys.path.extend(["../../", "../", "./"])
-
+import pickle
 import random
 import time
 import argparse
@@ -101,6 +101,23 @@ def train(train_instances, dev_instances, test_instances, parser, vocab, config,
                     print("Exceed best uas F-score: history = %.2f, current = %.2f" % (best_dev_las, dev_las))
                     best_dev_las = dev_las
 
+                    if config.save_after >= 0 and iter >= config.save_after:
+
+                        dp_model = {
+                            "mlp_words": parser.global_encoder.mlp_words.state_dict(),
+                            "rescale": parser.global_encoder.rescale.state_dict(),
+                            "edu_GRU": parser.global_encoder.edu_GRU.state_dict(),
+                            "sp_encoder": parser.sp_encoder.state_dict(),
+                            "state_encoder": parser.state_encoder.state_dict(),
+                            "decoder": parser.decoder.state_dict()
+                        }
+
+                        torch.save(dp_model, config.save_model_path)
+                        save_bert_path = config.save_bert_path
+                        global_encoder.bert_extractor.bert.save_pretrained(save_bert_path)
+                        tokenizer.tokenizer.save_pretrained(save_bert_path)
+                        print('Saving model to ', config.save_dir)               
+
 
 def predict(instances, parser, vocab, config, tokenizer, outputFile):
     start = time.time()
@@ -180,7 +197,7 @@ if __name__ == '__main__':
     torch.set_num_threads(args.thread)
 
     tok_helper = BertTokenHelper(config.bert_dir)
-    bert_extractor = BertExtractor(config, tok_helper)
+    bert_extractor = BertExtractor(config.bert_dir, config, tok_helper)
 
     ### use gpu or cpu
     config.use_cuda = False
@@ -204,7 +221,8 @@ if __name__ == '__main__':
         state_encoder.cuda()
         sp_encoder.cuda()
         decoder.cuda()
-
     parser = DialogDP(global_encoder, state_encoder, sp_encoder, decoder, config)
+
+    pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
 
     train(train_instances, dev_instances, test_instances, parser, vocab, config, tok_helper)

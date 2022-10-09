@@ -52,6 +52,9 @@ class Configurable(object):
     def config_file(self):
         return self._config.get('Save','config_file')
     @property
+    def save_bert_path(self):
+        return self._config.get('Save','save_bert_path')
+    @property
     def save_model_path(self):
         return self._config.get('Save','save_model_path')
     @property
@@ -60,6 +63,9 @@ class Configurable(object):
     @property
     def load_dir(self):
         return self._config.get('Save','load_dir')
+    @property
+    def load_bert_path(self):
+        return self._config.get('Save','load_bert_path')
     @property
     def load_model_path(self):
         return self._config.get('Save', 'load_model_path')

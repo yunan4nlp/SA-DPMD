@@ -4,10 +4,10 @@ from transformers.models.bert.modeling_bert import BertModel
 
 
 class BertExtractor(nn.Module):
-    def __init__(self, config, tok_helper):
+    def __init__(self, bert_dir, config, tok_helper):
         super(BertExtractor, self).__init__()
         self.config = config
-        self.bert = BertModel.from_pretrained(config.bert_dir)
+        self.bert = BertModel.from_pretrained(bert_dir)
         self.bert.resize_token_embeddings(len(tok_helper.tokenizer))
         print("Load bert model finished.")
 
